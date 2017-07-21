@@ -54,7 +54,7 @@ app.post('/articles', function(request, response) {
 
   function queryTwo() {
     client.query(
-      `SELECT author_id FROM author
+      `SELECT author_id FROM author WHEREBauthor=$1
        `, // TODO: Write a SQL query to retrieve the author_id from the authors table for the new article
       [request.body.author], // TODO: Add the author name as data for the SQL query
       function(err, result) {
@@ -66,8 +66,8 @@ app.post('/articles', function(request, response) {
 
   function queryThree(author_id) {
     client.query(
-      `INSERT INTO articles (article_id, author_id, title, category, "publishedOn", body) VALUES ($1, $2, $3, $4, $5, $6)`, // DONE: Write a SQL query to insert the new article using the author_id from our previous query
-      [request.body.article, author_id, request.body.title, request.body.category, request.body.publishedOn, request.body.body], // DONE: Add the data from our new article, including the author_id, as data for the SQL query.
+      `INSERT INTO articles (author_id, title, category, "publishedOn", body) VALUES ($1, $2, $3, $4, $5)`, // DONE: Write a SQL query to insert the new article using the author_id from our previous query
+      [author_id, request.body.title, request.body.category, request.body.publishedOn, request.body.body], // DONE: Add the data from our new article, including the author_id, as data for the SQL query.
       function(err) {
         if (err) console.error(err);
         response.send('insert complete');
@@ -81,10 +81,10 @@ app.put('/articles/:id', function(request, response) {
   // an author_id property, so we can reference it from the request.body.
   // TODO: Add the required values from the request as data for the SQL query to interpolate
   client.query(
-    `UPDATE author
-     SET value $1 = value1, column2 = value2, ...
-     WHERE condition `,
-    []
+    `UPDATE authors
+     SET author=$1, "authorUrl"=$2
+     WHERE author_id=$3`,
+    [request.body.author, request.body.authorUrl, request.body.author_id]
   )
   .then(function() {
     // TODO: Write a SQL query to update an article record. Keep in mind that article records
@@ -92,9 +92,16 @@ app.put('/articles/:id', function(request, response) {
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
       `UPDATE article
-      SET value $1 =
-      WHERE `,
-      []
+      SET author_id=$1, title=$2, category=$3, "publishedOn"=$4, body=$5
+      WHERE article_id=$6`,
+      [
+        request.body.author_id,
+        request.bodu.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body,
+        request.params.id
+      ]
     )
   })
   .then(function() {
